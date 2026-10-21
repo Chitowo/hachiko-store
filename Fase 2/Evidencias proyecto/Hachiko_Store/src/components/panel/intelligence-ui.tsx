@@ -1,0 +1,42 @@
+// Piezas compartidas de las vistas del grupo Inteligencia. Siguen la línea
+// editorial boutique del panel (Fraunces, soot/taupe/rust, .card-hs, .price-mono).
+
+export const clp = (n: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Math.round(n));
+export const num = (n: number) => n.toLocaleString('es-CL');
+export const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+// Los períodos se guardan a medianoche UTC (p. ej. 2026-10-01T00:00Z). Leerlos en
+// hora local corre el mes hacia atrás en zonas como Chile (UTC−3 → "sep").
+export const monthLabel = (d: Date) => `${MONTHS_ES[new Date(d).getUTCMonth()]} ${new Date(d).getUTCFullYear()}`;
+
+export function PageHeader({ title, subtitle, updated }: { title: string; subtitle: string; updated?: Date | null }) {
+  return (
+    <header className="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 className="text-2xl">{title}</h1>
+        <p className="editorial mt-1 text-[15px] text-taupe">{subtitle}</p>
+      </div>
+      {updated && (
+        <p className="text-xs text-taupe">
+          Actualizado {new Date(updated).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })}
+        </p>
+      )}
+    </header>
+  );
+}
+
+export function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <h2 className="editorial text-[15px] text-taupe">{children}</h2>;
+}
+
+export function Stat({ label, value, hint, accent }: { label: string; value: string; hint?: string; accent?: boolean }) {
+  return (
+    <div className="card-hs shadow-soft min-w-0 p-4 sm:p-5">
+      <p className="text-[13px] text-taupe">{label}</p>
+      {/* En teléfono los montos de 8+ dígitos no caben a 25px en media columna */}
+      <p className={`price-mono mt-1.5 break-all text-[19px] leading-none sm:text-[25px] ${accent ? 'text-rust-ink' : 'text-soot'}`}>{value}</p>
+      {hint && <p className="mt-2 text-xs text-taupe">{hint}</p>}
+    </div>
+  );
+}

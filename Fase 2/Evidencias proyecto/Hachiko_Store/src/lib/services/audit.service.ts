@@ -1,0 +1,91 @@
+import { subDays } from 'date-fns';
+import { db } from '@/src/lib/db';
+import type { Role } from '@prisma/client';
+
+export type AuditAction =
+  | 'LOGIN'
+  | 'LOGIN_FAILED'
+  | 'LOGOUT'
+  | 'REGISTER'
+  | 'REGISTER_EXISTING_EMAIL'
+  | 'ROLE_CHANGE'
+  | 'DATA_EXPORT'
+  | 'ACCOUNT_DELETE_REQUEST'
+  | 'ACCOUNT_DELETED'
+  | 'ORDER_CREATED'
+  | 'PAYMENT_INITIATED'
+  | 'PAYMENT_CONFIRMED'
+  | 'PAYMENT_FAILED'
+  | 'PAYMENT_REQUIRES_REFUND'
+  | 'ORDER_CANCELLED'
+  | 'REFUND_PROCESSED'
+  | 'REFUND_FAILED'
+  | 'ORDER_SHIPPED'
+  | 'ORDER_PREPARING'
+  | 'ORDER_DELIVERED'
+  | 'ORDER_NOT_PICKED_UP'
+  | 'PICKUP_REMINDER_SENT'
+  | 'RETURN_REQUESTED'
+  | 'RETURN_APPROVED'
+  | 'RETURN_REJECTED'
+  | 'RETURN_RECEIVED'
+  | 'RETURN_RESOLVED'
+  | 'ACCOUNT_LOCKED'
+  | 'REFRESH_TOKEN_REUSE'
+  | 'PASSWORD_RESET_REQUESTED'
+  | 'PASSWORD_RESET'
+  | 'EMAIL_VERIFIED'
+  | 'CONSENT_UPDATED'
+  | 'TOTP_ENABLED'
+  | 'TOTP_DISABLED'
+  | 'SECURITY_INCIDENT_CREATED'
+  | 'SECURITY_INCIDENT_EVENT'
+  | 'SECURITY_INCIDENT_STATUS_CHANGE'
+  | 'SECURITY_INCIDENT_AUTHORITY_REPORT'
+  | 'SECURITY_REPORT_EXPORTED'
+  | 'PROMO_CAMPAIGN_SENT'
+  | 'UPLOAD_REJECTED';
+
+interface AuditParams {
+  actorId?: string;
+  actorRole?: Role;
+  action: AuditAction;
+  targetType?: string;
+  targetId?: string;
+  metadata?: Record<string, unknown>;
+  ip?: string;
+  userAgent?: string;
+}
+
+// Ley 21.719 — limitación del plazo de conservación: la IP y el user-agent son
+// datos personales, así que se conservan 12 meses (suficiente para investigar
+// un incidente o respaldar una denuncia) y luego se anonimizan. El resto del
+// registro (acción, fecha, tipo de objetivo) se mantiene como traza de auditoría.
+export const AUDIT_PII_RETENTION_DAYS = 365;
+
+export async function anonymizeExpiredAuditData(): Promise<{ anonymized: number }> {
+  const cutoff = subDays(new Date(), AUDIT_PII_RETENTION_DAYS);
+  const result = await db.auditLog.updateMany({
+    where: {
+      createdAt: { lt: cutoff },
+      OR: [{ ip: { not: null } }, { userAgent: { not: null } }],
+    },
+    data: { ip: null, userAgent: null },
+  });
+  return { anonymized: result.count };
+}
+
+export async function writeAudit(params: AuditParams): Promise<void> {
+  await db.auditLog.create({
+    data: {
+      actorId: params.actorId,
+      actorRole: params.actorRole,
+      action: params.action,
+      targetType: params.targetType,
+      targetId: params.targetId,
+      metadata: params.metadata ? JSON.parse(JSON.stringify(params.metadata)) : undefined,
+      ip: params.ip,
+      userAgent: params.userAgent,
+    },
+  });
+}

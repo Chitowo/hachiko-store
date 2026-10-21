@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    # Postgres desechable para los tests de integración (concurrencia de
+    # compras y pagos). Nunca se usa Neon en CI para escribir.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: hachiko_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d hachiko_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin `version`: pnpm/action-setup lee la versión de "packageManager" en
+      # package.json. Declararla en ambos lados causa ERR_PNPM_BAD_PM_VERSION.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # .npmrc tiene ignore-scripts: el postinstall (prisma generate) no corre solo
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Audit
+        run: pnpm audit --audit-level=moderate
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Integration tests (Postgres real)
+        env:
+          DATABASE_URL: postgresql://test:test@127.0.0.1:55432/hachiko_test
+          DIRECT_URL: postgresql://test:test@127.0.0.1:55432/hachiko_test
+        run: |
+          pnpm exec prisma db push --skip-generate
+          pnpm test:integration
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          DATA_ENCRYPTION_KEY: ${{ secrets.DATA_ENCRYPTION_KEY }}
+          TBK_ENV: integration
+          TBK_COMMERCE_CODE: ${{ secrets.TBK_COMMERCE_CODE }}
+          TBK_API_KEY: ${{ secrets.TBK_API_KEY }}
+          MP_ACCESS_TOKEN: ${{ secrets.MP_ACCESS_TOKEN }}
+          MP_PUBLIC_KEY: ${{ secrets.MP_PUBLIC_KEY }}
+          MP_WEBHOOK_SECRET: ${{ secrets.MP_WEBHOOK_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NEXT_PUBLIC_APP_URL: https://hachiko.cl
