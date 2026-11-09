@@ -8,6 +8,7 @@ import { Card, Skeleton, Txt } from '@/ui/core';
 import { Icon } from '@/ui/Icon';
 import { Paper } from '@/ui/brand';
 import { EmptyState, SectionHeader } from '@/ui/layout';
+import { ThemeToggle } from '@/ui/ThemeToggle';
 import { ProductCard } from '@/features/catalog/ProductCard';
 import { useCategories, useMe, useMyOrders, useProducts } from '@/lib/queries';
 import { useSession } from '@/lib/session';
@@ -35,7 +36,7 @@ export default function Home() {
       renderItem={({ item }) => <ProductCard product={item} width={colW} />}
       onEndReached={() => products.hasNextPage && !products.isFetchingNextPage && products.fetchNextPage()}
       onEndReachedThreshold={0.6}
-      refreshControl={<RefreshControl refreshing={products.isRefetching} onRefresh={() => products.refetch()} tintColor={c.primaryStrong} colors={[c.primaryStrong]} />}
+      refreshControl={<RefreshControl refreshing={products.isRefetching} onRefresh={() => void products.refetch()} tintColor={c.primaryStrong} colors={[c.primaryStrong]} />}
       ListHeaderComponent={<Header />}
       ListEmptyComponent={
         products.isLoading ? (
@@ -46,7 +47,7 @@ export default function Home() {
           </View>
         ) : products.isError ? (
           <EmptyState icon="refresh" title="No pudimos cargar la vitrina" body="Revisa tu conexión y vuelve a intentarlo." action={{ label: 'Reintentar', onPress: () => products.refetch() }} />
-        ) : null
+        ) : undefined
       }
     />
   );
@@ -65,7 +66,10 @@ function Header() {
   return (
     <View>
       <Paper style={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 52, borderBottomLeftRadius: shape.xl, borderBottomRightRadius: shape.xl }}>
-        <Txt variant="bodyM" color={c.onPaper} style={{ opacity: 0.7, fontFamily: undefined }}>하치코</Txt>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Txt variant="bodyM" color={c.onPaper} style={{ opacity: 0.7, fontFamily: undefined }}>하치코</Txt>
+          <ThemeToggle />
+        </View>
         <Txt variant="headlineL" color={c.onPaper} accessibilityRole="header" style={{ marginTop: 2 }}>
           {name ? `Hola, ${name}` : 'Hola'}
         </Txt>

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { FlatList, RefreshControl, ScrollView, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -7,7 +7,10 @@ import { fonts, shape } from '@/theme/tokens';
 import { Chip, Divider, IconButton, ListItem, Skeleton, Txt } from '@/ui/core';
 import { Icon } from '@/ui/Icon';
 import { EmptyState } from '@/ui/layout';
-import { useInventory } from '@/lib/queries';
+import { PageSizeChips, Pager } from '@/ui/Pager';
+import { ThemeToggle } from '@/ui/ThemeToggle';
+import { LIST_PAGE_SIZES, useInventory, type ListPageSize } from '@/lib/queries';
+import type { InventoryRow } from '@/lib/types';
 
 // Inventario: buscar por nombre o SKU, ver solo lo que está bajo el umbral, y
 // tocar un producto para ajustar su stock (o escanearlo).
@@ -21,15 +24,30 @@ export default function InventoryScreen() {
     const t = setTimeout(() => setQ(text.trim()), 300);
     return () => clearTimeout(t);
   }, [text]);
-  const inv = useInventory(q, low);
-  const items = useMemo(() => inv.data?.pages.flatMap((p) => p.items) ?? [], [inv.data]);
-  const lowCount = inv.data?.pages[0]?.lowCount;
+  const [size, setSize] = useState<ListPageSize>(20);
+  const [page, setPage] = useState(1);
+  const list = useRef<FlatList<InventoryRow>>(null);
+  // Cambiar búsqueda, filtro o tamaño vuelve a la página 1.
+  const filterKey = `${q}|${low}|${size}`;
+  const [lastKey, setLastKey] = useState(filterKey);
+  if (filterKey !== lastKey) {
+    setLastKey(filterKey);
+    setPage(1);
+  }
+  const inv = useInventory(q, low, page, size);
+  const items = inv.data?.items ?? [];
+  const lowCount = inv.data?.lowCount;
+  const goTo = (n: number) => {
+    setPage(n);
+    list.current?.scrollToOffset({ offset: 0, animated: true });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingTop: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 8 }}>
         <Txt variant="headlineM" accessibilityRole="header" style={{ flex: 1 }}>Inventario</Txt>
         <IconButton icon="scan" label="Escanear un producto" variant="tonal" onPress={() => router.push('/vendedor/escanear')} />
+        <ThemeToggle />
       </View>
 
       <View style={{ marginHorizontal: 16, marginTop: 12, height: 48, borderRadius: shape.full, backgroundColor: c.surfaceContainerHigh, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 4, gap: 10 }}>
@@ -37,17 +55,21 @@ export default function InventoryScreen() {
         <TextInput value={text} onChangeText={setText} placeholder="Nombre o SKU" placeholderTextColor={c.onSurfaceVariant} accessibilityLabel="Buscar producto" autoCapitalize="none" maxLength={100} style={{ flex: 1, fontFamily: fonts.body, fontSize: 15, color: c.onSurface, height: 48 }} />
         {text.length > 0 && <IconButton icon="close" label="Borrar búsqueda" size={40} onPress={() => setText('')} />}
       </View>
-      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 12 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0 }} contentContainerStyle={{ alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12 }}>
         <Chip label={lowCount !== undefined ? `Bajo el umbral · ${lowCount}` : 'Bajo el umbral'} selected={low} onPress={() => setLow((v) => !v)} />
-      </View>
+        <View style={{ width: 1, height: 20, backgroundColor: c.outlineVariant, marginHorizontal: 4 }} />
+        <PageSizeChips sizes={LIST_PAGE_SIZES} value={size} onChange={setSize} />
+      </ScrollView>
 
       <FlatList
+        ref={list}
         data={items}
         keyExtractor={(p) => p.id}
         ItemSeparatorComponent={() => <Divider />}
-        refreshControl={<RefreshControl refreshing={inv.isRefetching} onRefresh={() => inv.refetch()} tintColor={c.primaryStrong} colors={[c.primaryStrong]} />}
-        onEndReached={() => inv.hasNextPage && !inv.isFetchingNextPage && inv.fetchNextPage()}
+        refreshControl={<RefreshControl refreshing={inv.isRefetching} onRefresh={() => void inv.refetch()} tintColor={c.primaryStrong} colors={[c.primaryStrong]} />}
+        style={{ opacity: inv.isPlaceholderData ? 0.6 : 1 }}
         contentContainerStyle={{ paddingBottom: 24 }}
+        ListFooterComponent={inv.data && inv.data.total > 0 ? <Pager page={inv.data.page} totalPages={inv.data.totalPages} total={inv.data.total} size={size} noun={['producto', 'productos']} onGo={goTo} /> : undefined}
         renderItem={({ item: p }) => (
           <ListItem
             title={p.name}

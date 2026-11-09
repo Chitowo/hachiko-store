@@ -1,14 +1,27 @@
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
-import { elevation, shape } from '@/theme/tokens';
+import { shape } from '@/theme/tokens';
 import { Card, Divider, LeadIcon, ListItem, Skeleton, Txt, tap } from '@/ui/core';
 import { Icon } from '@/ui/Icon';
 import { Paper } from '@/ui/brand';
 import { EmptyState, SectionHeader } from '@/ui/layout';
+import { ThemeToggle } from '@/ui/ThemeToggle';
+import { ExtendedFab } from '@/ui/Fab';
 import { useSellerToday } from '@/lib/queries';
 import { clp, plural, relative, todayTitle } from '@/lib/format';
+import { SITE_URL } from '@/lib/api';
+
+// El inventario existe en la app; el resto de los avisos (incidencias, riesgo,
+// reembolsos, devoluciones…) abre esa sección del panel web.
+const inApp = (href: string) => href.startsWith('/trastienda/inventario');
+function openAlert(href: string) {
+  tap();
+  if (inApp(href)) router.navigate('/inventario');
+  else void WebBrowser.openBrowserAsync(`${SITE_URL}${href}`);
+}
 
 // "Hoy": lo primero que ve el vendedor. Lo urgente arriba (avisos, lo que hay
 // que empacar, lo que se está acabando) y el escáner siempre a mano.
@@ -22,11 +35,12 @@ export default function Today() {
     <View style={{ flex: 1, backgroundColor: c.background }}>
       <ScrollView
         contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 112 }}
-        refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={c.primaryStrong} colors={[c.primaryStrong]} />}
+        refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} tintColor={c.primaryStrong} colors={[c.primaryStrong]} />}
       >
         <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Icon name="store" size={22} color={c.onSurfaceVariant} />
-          <Txt variant="labelL" color={c.onSurfaceVariant}>Trastienda</Txt>
+          <Txt variant="labelL" color={c.onSurfaceVariant} style={{ flex: 1 }}>Trastienda</Txt>
+          <ThemeToggle />
         </View>
         <Txt variant="headlineL" accessibilityRole="header" style={{ paddingHorizontal: 16, marginTop: 12 }}>{todayTitle()}</Txt>
 
@@ -54,10 +68,18 @@ export default function Today() {
                 {d.alerts.slice(0, 3).map((a, i) => {
                   const tone = a.level === 'critical' ? [c.errorContainer, c.onErrorContainer] : a.level === 'warning' ? [c.primaryContainer, c.onPrimaryContainer] : [c.surfaceContainerHigh, c.onSurfaceVariant];
                   return (
-                    <View key={i} accessibilityRole="alert" style={{ flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: shape.md, backgroundColor: tone[0] }}>
+                    <Pressable
+                      key={i}
+                      accessibilityRole="button"
+                      accessibilityLabel={a.message}
+                      accessibilityHint={inApp(a.href) ? 'Abre el inventario' : 'Abre esta sección en el panel web'}
+                      onPress={() => openAlert(a.href)}
+                      style={({ pressed }) => ({ flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: shape.md, backgroundColor: tone[0], opacity: pressed ? 0.75 : 1 })}
+                    >
                       <Icon name={a.level === 'info' ? 'info' : 'alert'} size={18} color={tone[1]!} />
                       <Txt variant="bodyM" color={tone[1]} style={{ flex: 1 }}>{a.message}</Txt>
-                    </View>
+                      <Icon name={inApp(a.href) ? 'chevronRight' : 'external'} size={18} color={tone[1]!} />
+                    </Pressable>
                   );
                 })}
               </View>
@@ -109,16 +131,7 @@ export default function Today() {
         )}
       </ScrollView>
 
-      {/* FAB extendido: escanear un producto */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Escanear un producto"
-        onPress={() => { tap(); router.push('/vendedor/escanear'); }}
-        style={({ pressed }) => ({ position: 'absolute', right: 16, bottom: 16, height: 56, paddingHorizontal: 20, borderRadius: shape.lg, backgroundColor: c.primary, flexDirection: 'row', alignItems: 'center', gap: 12, transform: [{ scale: pressed ? 0.96 : 1 }], ...elevation(3, c.shadow) })}
-      >
-        <Icon name="scan" size={22} color={c.onPrimary} />
-        <Txt variant="labelL" color={c.onPrimary}>Escanear</Txt>
-      </Pressable>
+      <ExtendedFab icon="scan" label="Escanear" accessibilityLabel="Escanear un producto" onPress={() => router.push('/vendedor/escanear')} />
     </View>
   );
 }
