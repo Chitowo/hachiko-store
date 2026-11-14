@@ -12,7 +12,7 @@ OWASP Top 10 está en [seguridad-owasp.md](../seguridad-owasp.md) y las pruebas 
 | Navegador | CSP con *nonce* por respuesta y `strict-dynamic`. Para scripts no hay `unsafe-inline`, ni `unsafe-eval` en producción. Los estilos sí admiten `unsafe-inline`, porque no ejecutan código | `buildCsp` en [middleware.ts](../../src/middleware.ts) |
 | Navegador | HSTS (2 años, `preload`), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy` y `Permissions-Policy` (sin cámara, micrófono ni ubicación) | [next.config.ts](../../next.config.ts) |
 | Navegador | `frame-ancestors 'none'` (*clickjacking*) y `form-action` limitado al propio sitio y a Transbank | CSP |
-| Sesión | Tokens JWE cifrados; cookies `HttpOnly`, `Secure` y `SameSite=Strict`; rotación con detección de reutilización | [02-autenticacion.md](02-autenticacion.md) |
+| Sesión | Tokens JWE cifrados; cookies `HttpOnly` y `Secure` (access `SameSite=Lax`, refresh `SameSite=Strict`); rotación con detección de reutilización | [02-autenticacion.md](02-autenticacion.md) |
 | Acceso | RBAC en tres capas: middleware, layout del panel y cada acción o ruta | [rbac.ts](../../src/lib/auth/rbac.ts), [v1.ts](../../src/lib/api/v1.ts) |
 | Acceso | **Propiedad de los recursos:** los pedidos se buscan siempre `WHERE id = ? AND userId = sesión` (por ejemplo, `getOrderForClient` y `getUnpaidOrderForUser`), contra IDOR | [order.service.ts](../../src/lib/services/order.service.ts) |
 | Entrada | zod en el servidor, tope de tamaño del cuerpo y ids acotados | [schemas.ts](../../src/lib/validation/schemas.ts), [http-body.ts](../../src/lib/http-body.ts) |
@@ -61,6 +61,8 @@ El panel de Seguridad muestra **conteos y eventos, no el detalle de los clientes
 - **Severidad:** baja, media, alta o crítica.
 - **Estados:** abierta, investigando, contenida, resuelta, denunciada o notificada a la
   autoridad, y cerrada.
+- Un cambio de estado queda en la bitácora con los nombres en español ("Abierta → Contenida")
+  y la justificación del vendedor.
 - Cada nota o cambio de estado es un evento de la **bitácora encadenada**: lleva el hash
   SHA-256 del evento anterior, y `verifyChain` detecta cualquier alteración, eliminación o
   cambio de orden ([integrity.ts](../../src/lib/crypto/integrity.ts)).
