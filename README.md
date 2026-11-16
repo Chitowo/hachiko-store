@@ -452,7 +452,7 @@ docs/                   documentación viva
 
 Proyecto de título (Capstone) de Ingeniería en Informática, DuocUC sede Plaza Norte.
 
-Christ Louidor · Vicente Donoso · Nelson Zarate
+Christ Louidor · Vicente Donoso · Nelson Zarate -- #Grupo 6
 
 Todo cambio entra por `issue → rama → PR` con commits convencionales y ramas `feat/`, `fix/`, `chore/`, `sec/`.
 
