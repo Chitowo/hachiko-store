@@ -368,22 +368,6 @@ pnpm test:e2e           # 16 tests
 
 ---
 
-## 📚 Documentación
-
-| Área | Documento |
-|---|---|
-| **Seguridad** | [OWASP Top 10 → código](docs/seguridad-owasp.md) · [Pentest local](docs/pentest-local-2026-10.md) · [Retención y anonimización](docs/retencion-anonimizacion-datos.md) |
-| **Inteligencia** | [Machine learning (CRISP-DM)](docs/machine-learning.md) · [Pipeline `/ml`](ml/README.md) |
-| **Calidad** | [ISO/IEC 25010](docs/calidad-iso25010.md) · [ISO/IEC 25012](docs/calidad-datos-iso25012.md) · [ISO/IEC 12207](docs/ciclo-de-vida-iso12207.md) · [IEEE 730](docs/plan-sqa-ieee730.md) · [CMMI](docs/procesos-cmmi.md) |
-| **API** | [Referencia](docs/api.md) · [OpenAPI 3.1](docs/api/openapi.json) (Swagger UI en `/api/docs`, solo desarrollo) |
-| **Manual** | [Probar Hachiko en tu casa: web y app en el teléfono](docs/manual-demo-telefono.md) (equipo y comisión) |
-| **Operación** | [Despliegue](docs/deploy.md) · [Docker local](docs/despliegue-local-docker.md) · [Carga masiva](docs/carga-masiva.md) · [Guía de pruebas](docs/guia-de-pruebas.md) |
-| **App móvil** | [mobile/README.md](mobile/README.md) |
-| **Cómo funciona** | [Arquitectura, backend, frontend, app y cada flujo por dentro](docs/codigo/README.md) · [Teoría (decisiones de arquitectura, concurrencia, seguridad, pagos, ML, leyes, calidad) y preguntas de la comisión](docs/teoria/README.md) |
-| **Capstone** | Evidencias académicas en [`Capstone/`](Capstone/) |
-
----
-
 ## 🗂️ Estructura
 
 ```
