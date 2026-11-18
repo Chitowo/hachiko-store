@@ -188,7 +188,7 @@ clientes compran la última unidad a la vez, uno gana y el otro recibe un error 
 Si el dinero llega pero el pedido ya no se puede cumplir, pasa a `CANCELLED` con pago
 `REFUND_PENDING`; nunca queda pagado a medias.
 
-Cubierto por [tests de integración contra Postgres real](tests/integration/checkout-flow.test.ts):
+Cubierto por tests de integración contra un entorno de PostgreSQL real:
 cinco compras paralelas sobre una unidad, pagos tardíos simultáneos, webhooks duplicados,
 cancelación y pago al mismo tiempo, y monto distinto.
 
@@ -212,18 +212,18 @@ cancelación y pago al mismo tiempo, y monto distinto.
 - Dashboard «Hoy», órdenes por despachar con flujo *Para empacar → Preparando → Enviado /
   Listo para retiro → Entregado*, devoluciones y promociones.
 - CRUD de productos con **edición de precio auditada** y **carga masiva por CSV/XLSX**
-  con vista previa, reposición por SKU y plantilla ([guía](docs/carga-masiva.md)).
+  con vista previa, reposición por SKU y plantilla disponible en la documentación.
 - Inventario con ajuste manual de stock (motivo obligatorio, ledger inmutable).
 - Grupo «Inteligencia» con las 10 vistas y módulo de Seguridad.
 
-**App móvil (Expo / React Native)** — [detalles](mobile/README.md)
+**App móvil (Expo / React Native)**
 - Clientes: vitrina, búsqueda, carrito, pago en el navegador seguro del sistema y mis pedidos.
 - Vendedor: pedidos por despachar, inventario, escáner de códigos.
 - El refresh token vive en el llavero cifrado del teléfono; la app nunca maneja datos de tarjeta.
 
 **PWA instalable** desde [hachiko-store.vercel.app](https://hachiko-store.vercel.app), con
 accesos directos y página sin conexión. El service worker solo guarda archivos públicos,
-**nunca páginas ni respuestas de la API** (cubierto por [tests](tests/unit/pwa.test.ts)).
+**nunca páginas ni respuestas de la API** (validado mediante pruebas unitarias).
 
 ---
 
