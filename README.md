@@ -88,8 +88,7 @@ genérica no trae:
 
 ## 🔒 Seguridad integrada desde el diseño
 
-La seguridad no se agregó al final: cada control está en la arquitectura y apunta al archivo
-donde vive en [`docs/seguridad-owasp.md`](docs/seguridad-owasp.md).
+La seguridad no se agregó al final: cada control está integrado en la arquitectura y documentado formalmente en el expediente de seguridad del proyecto.
 
 ### Autenticación y sesiones
 - **Argon2id** (memory-hard) para contraseñas.
@@ -127,8 +126,7 @@ donde vive en [`docs/seguridad-owasp.md`](docs/seguridad-owasp.md).
 - Módulo `/trastienda/seguridad`: incidencias tipificadas según la Ley 21.459, flujo de
   notificación a la autoridad (Leyes 21.663 y 21.719) y **bitácora encadenada por hash SHA-256**
   (`verifyChain`): alterar o borrar un registro rompe la cadena.
-- Las IP de incidencias se anonimizan y eliminan automáticamente al vencer su plazo
-  ([política de retención](docs/retencion-anonimizacion-datos.md)).
+- Las IP de incidencias se anonimizan y eliminan automáticamente al cumplirse su plazo de retención establecido.
 
 ### Cadena de suministro
 - pnpm con `ignore-scripts`, lockfile congelado en CI y versiones exactas en auth, cripto y pagos.
@@ -138,8 +136,7 @@ donde vive en [`docs/seguridad-owasp.md`](docs/seguridad-owasp.md).
 ### Verificado con pentest
 En octubre de 2026 se ejecutaron 34 verificaciones y pruebas destructivas contra un build de
 producción local. Se encontraron 4 hallazgos (1 de enumeración y 3 de disponibilidad), todos
-corregidos y verificados: la batería pasa **34/34**. Detalle en
-[`docs/pentest-local-2026-10.md`](docs/pentest-local-2026-10.md).
+corregidos y verificados: la batería pasa **34/34** según los registros de las pruebas locales.
 
 > ¿Encontraste una vulnerabilidad? No abras un issue público: escribe directamente al equipo.
 
@@ -148,7 +145,7 @@ corregidos y verificados: la batería pasa **34/34**. Detalle en
 ## 🧠 KPIs resueltos con machine learning.
 
 El subsistema convierte la operación diaria en respuestas para el dueño del negocio. Sigue la
-metodología **CRISP-DM** y está documentado en [`docs/machine-learning.md`](docs/machine-learning.md).
+metodología **CRISP-DM** y cuenta con su respectiva especificación técnica en el proyecto.
 
 | Pregunta del negocio | Modelo | Técnica | Métrica |
 |---|---|---|---|
