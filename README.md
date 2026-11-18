@@ -145,7 +145,7 @@ corregidos y verificados: la batería pasa **34/34**. Detalle en
 
 ---
 
-## 🧠 KPIs resueltos con machine learning
+## 🧠 KPIs resueltos con machine learning.
 
 El subsistema convierte la operación diaria en respuestas para el dueño del negocio. Sigue la
 metodología **CRISP-DM** y está documentado en [`docs/machine-learning.md`](docs/machine-learning.md).
